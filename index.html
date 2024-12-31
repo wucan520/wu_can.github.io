@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>跨年祝福</title>
+  <!-- 引入 fireworks-js 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/fireworks-js@2.10.2/dist/fireworks.js"></script>
+  <style>
+    /* 基本样式重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden; /* 防止滚动条 */
+      position: relative;
+      font-family: "微软雅黑", sans-serif;
+      background: #000; /* 烟花在深色背景上更显眼 */
+    }
+
+    /* 烟花容器 */
+    #fireworksContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1; /* 烟花在最底层 */
+    }
+
+    /* 飘动爱心容器 */
+    .heart-container {
+      position: fixed;
+      bottom: -50px; /* 初始位置在下方 */
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2; /* 在烟花之上 */
+      font-size: 30px;
+      color: #ff6b81;
+      opacity: 0.8;
+      animation: floatUp linear forwards;
+    }
+    @keyframes floatUp {
+      0% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(-120vh);
+        opacity: 0;
+      }
+    }
+
+    /* 弹窗蒙层 */
+    .overlay {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%; 
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex; 
+      align-items: center;
+      justify-content: center;
+      z-index: 3; /* 在所有元素之上 */
+    }
+
+    /* 弹窗主体 */
+    .popup {
+      background-color: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      text-align: center;
+      max-width: 80%;
+      animation: popupFadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes popupFadeIn {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* 弹窗内文字显示区 */
+    .popup .text-container {
+      font-size: 1.1em;
+      line-height: 1.8em;
+      color: #444;
+      min-height: 100px; /* 打字效果留位置 */
+      margin-bottom: 20px;
+      white-space: pre-wrap; /* 允许换行 */
+    }
+
+    /* 弹窗内标题 & 按钮 */
+    .popup h1 {
+      margin-bottom: 16px;
+      font-size: 1.4em;
+      color: #f53b57;
+    }
+    .popup button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #f53b57;
+      color: #fff;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+    .popup button:hover {
+      background-color: #ff5f7e;
+    }
+  </style>
+</head>
+<body>
+  <!-- 烟花容器 -->
+  <div id="fireworksContainer"></div>
+
+  <!-- 弹窗蒙层 -->
+  <div class="overlay" id="overlay">
+    <div class="popup">
+      <h1>新年快乐，宝贝！</h1>
+      <!-- 逐行显示文字 -->
+      <div class="text-container" id="textContainer"></div>
+      <button onclick="closePopup()">知道啦</button>
+    </div>
+  </div>
+
+  <script>
+    /**************************************
+     *      1. 逐行显示文字（打字机）      *
+     **************************************/
+
+    // 在这里自定义你想逐行显示的文字
+    const lines = [
+      "在这辞旧迎新的时刻，",
+      "想把满满的爱与祝福送给你：",
+      "新的一年里，愿你快乐常伴，",
+      "健康如意，万事顺心，",
+      "更希望我们一起携手，",
+      "创造更多美好回忆！"
+    ];
+
+    let currentLine = 0;    // 正在打第几行
+    let currentChar = 0;    // 正在打这一行的第几个字符
+    let textInterval = null;
+
+    // 用于展示文字的容器
+    const textContainer = document.getElementById('textContainer');
+
+    function typeText() {
+      // 如果已打完所有行，就停止
+      if (currentLine >= lines.length) {
+        clearInterval(textInterval);
+        return;
+      }
+
+      // 获取当前行文本
+      const lineText = lines[currentLine];
+      // 截取已经要显示的子串
+      const displayed = lineText.substring(0, currentChar + 1);
+
+      // 拼接到容器中，已显示的行不再变动，只更新当前行
+      // 先把之前的完整行都拼上，再加上当前行已打的部分
+      let allText = "";
+      for (let i = 0; i < currentLine; i++) {
+        allText += lines[i] + "\n"; 
+      }
+      allText += displayed; 
+
+      // 设置到页面
+      textContainer.textContent = allText;
+
+      // 继续下一个字符
+      currentChar++;
+
+      // 如果当前行所有字符都打完了，换到下一行
+      if (currentChar === lineText.length) {
+        currentLine++;
+        currentChar = 0;
+        // 换行间隔可稍微暂停一下
+        clearInterval(textInterval);
+        setTimeout(() => {
+          textInterval = setInterval(typeText, 80); // 再继续打下一行
+        }, 500);
+      }
+    }
+
+    /**************************************
+     *        2. 页面飘动爱心动画         *
+     **************************************/
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.classList.add('heart-container');
+      heart.innerHTML = '❤'; // 也可用图片或其他符号
+
+      // 随机调整位置、大小和动画时长
+      const randomLeft = Math.random() * 100; // 0% ~ 100%
+      const randomSize = 20 + Math.random() * 30; // 20px ~ 50px
+      const randomDuration = 4000 + Math.random() * 3000; // 4s ~ 7s
+      heart.style.left = randomLeft + '%';
+      heart.style.fontSize = randomSize + 'px';
+      heart.style.animationDuration = randomDuration + 'ms';
+
+      document.body.appendChild(heart);
+
+      // 动画结束后移除DOM
+      setTimeout(() => {
+        document.body.removeChild(heart);
+      }, randomDuration);
+    }
+
+    // 每隔一段时间创建一个爱心
+    function startHearts() {
+      setInterval(createHeart, 800); // 0.8秒飘一个
+    }
+
+    /**************************************
+     *          3. 背景烟花效果          *
+     **************************************/
+    function startFireworks() {
+      // 使用 fireworks-js 库
+      const container = document.getElementById('fireworksContainer');
+      const fireworks = new Fireworks(container, {
+        // 一些常见参数，可根据喜好微调
+        hue: { min: 0, max: 360 }, 
+        delay: { min: 15, max: 15 },
+        rocketsPoint: { min: 50, max: 50 },
+        speed: 2,
+        acceleration: 1.05,
+        friction: 0.95,
+        gravity: 1.5,
+        particles: 50,
+        trace: 3,
+        explosion: 5,
+        autoresize: true,
+        brightness: { min: 50, max: 80 },
+        boundaries: {
+          x: 50,
+          y: 50,
+          width: window.innerWidth - 100,
+          height: window.innerHeight - 100
+        },
+        sound: {
+          enable: false,
+          files: [
+            'explosion0.mp3',
+            'explosion1.mp3',
+            'explosion2.mp3'
+          ],
+          volume: { min: 50, max: 50 }
+        },
+        // 其他参数可参考文档
+      });
+      fireworks.start();
+    }
+
+    /**************************************
+     *       4. 弹窗关闭 + 自定义操作      *
+     **************************************/
+    function closePopup() {
+      document.getElementById('overlay').style.display = 'none';
+      // 如果要在关闭后跳转到别的页面，可自行加
+      // window.location.href = '你的彩蛋页面.html';
+    }
+
+    /**************************************
+     *       5. 页面加载后启动所有功能      *
+     **************************************/
+    window.onload = function() {
+      // 启动烟花
+      startFireworks();
+      // 启动飘心
+      startHearts();
+      // 启动逐行打字
+      textInterval = setInterval(typeText, 80);
+    };
+  </script>
+</body>
+</html>
